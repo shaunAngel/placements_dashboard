@@ -1,22 +1,18 @@
 from fastapi import APIRouter
-from app.database import students_collection
+from app.database import branch_collection
 
 router = APIRouter()
 
 @router.get("/")
 def branch_stats():
-    pipeline = [
-        {
-            "$group": {
-                "_id": "$branch",
-                "totalStudents": {"$sum": 1},
-                "placed": {
-                    "$sum": {
-                        "$cond": ["$placed", 1, 0]
-                    }
-                }
-            }
-        }
-    ]
+    data = list(branch_collection.find({}, {"_id": 0}))
 
-    return list(students_collection.aggregate(pipeline))
+    return [
+        {
+            "branch": d["branch"],
+            "totalStudents": d.get("onRolls", 0),
+            "placed": d.get("placed", 0),
+            "placementPercentage": d.get("placementPercent", 0)
+        }
+        for d in data
+    ]
