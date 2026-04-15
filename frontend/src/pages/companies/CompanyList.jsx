@@ -2,41 +2,45 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid3X3, List, Search } from 'lucide-react';
 import { useCompanyStore } from '../../store';
-import { getCompanyTypeColor } from '../../utils/helpers'; // Ensure this exists or use a local map
 import DataTable from '../../components/ui/DataTable';
 
 export default function CompanyList() {
   const { companies, fetchCompanies } = useCompanyStore();
   const navigate = useNavigate();
+
   const [view, setView] = useState('grid');
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ sector: 'All', branch: 'All' });
+  const [selectedSector, setSelectedSector] = useState("All");
 
   useEffect(() => {
     fetchCompanies();
-  }, [fetchCompanies]);
+  }, []);
 
-  // ✅ Filtering logic mapped to your MongoDB fields
-  const filtered = useMemo(() => {
-    let list = Array.isArray(companies) ? companies : [];
-    
+  // 🔥 FINAL FILTER (FIXED PROPERLY)
+  const filteredCompanies = useMemo(() => {
+    let filtered = companies;
+  
+    if (selectedSector !== "All") {
+      filtered = filtered.filter(
+        (c) => c.companySector === selectedSector
+      );
+    }
+  
     if (search) {
-      list = list.filter(c => c.companyName?.toLowerCase().includes(search.toLowerCase()));
+      filtered = filtered.filter((c) =>
+        c.companyName?.toLowerCase().includes(search.toLowerCase())
+      );
     }
-    if (filters.sector !== 'All') {
-      list = list.filter(c => c.companySector === filters.sector);
-    }
-    if (filters.branch !== 'All') {
-      list = list.filter(c => c.branches?.includes(filters.branch));
-    }
-    return list;
-  }, [companies, search, filters]);
+  
+    return filtered;
+  }, [companies, selectedSector, search]);
 
-  // ✅ Columns for Table View
+  // Table Columns
   const columns = [
     {
-      key: 'companyName', label: 'Company',
-      render: (v, row) => (
+      key: 'companyName',
+      label: 'Company',
+      render: (v) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-bold text-primary text-xs">
             {v?.[0]}
@@ -45,55 +49,93 @@ export default function CompanyList() {
         </div>
       ),
     },
-    { key: 'companySector', label: 'Sector', render: v => <span className="badge badge-info">{v}</span> },
-    { key: 'avgPackage', label: 'Avg Package', render: v => `${v} LPA` },
-    { key: 'highestPackage', label: 'Highest', render: v => <span className="font-bold text-accent">{v} LPA</span> },
     {
-      key: 'branches', label: 'Eligible Branches',
-      render: v => (
-        <div className="flex flex-wrap gap-1">
-          {(v || []).slice(0, 3).map(b => <span key={b} className="badge badge-gray">{b}</span>)}
-          {v?.length > 3 && <span className="badge badge-gray">+{v.length - 3}</span>}
-        </div>
+      key: 'companySector',
+      label: 'Sector',
+      render: (v) => <span className="badge badge-info">{v}</span>,
+    },
+    {
+      key: 'avgPackage',
+      label: 'Avg Package',
+      render: (v) => `${v} LPA`,
+    },
+    {
+      key: 'highestPackage',
+      label: 'Highest',
+      render: (v) => (
+        <span className="font-bold text-accent">{v} LPA</span>
       ),
     },
   ];
 
   return (
     <div className="space-y-5 animate-fade-in">
+
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Placement Companies</h1>
-          <p className="text-gray-500 text-sm mt-0.5">{filtered.length} companies participating</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {filteredCompanies.length} companies participating
+          </p>
         </div>
+
         <div className="flex gap-2">
-          <button onClick={() => setView('grid')} className={`p-2 rounded-lg border ${view === 'grid' ? 'bg-primary text-white' : 'text-gray-400'}`}><Grid3X3 size={18} /></button>
-          <button onClick={() => setView('list')} className={`p-2 rounded-lg border ${view === 'list' ? 'bg-primary text-white' : 'text-gray-400'}`}><List size={18} /></button>
+          <button
+            onClick={() => setView('grid')}
+            className={`p-2 rounded-lg border ${
+              view === 'grid' ? 'bg-primary text-white' : 'text-gray-400'
+            }`}
+          >
+            <Grid3X3 size={18} />
+          </button>
+
+          <button
+            onClick={() => setView('list')}
+            className={`p-2 rounded-lg border ${
+              view === 'list' ? 'bg-primary text-white' : 'text-gray-400'
+            }`}
+          >
+            <List size={18} />
+          </button>
         </div>
       </div>
 
-      {/* Filters Section */}
+      {/* FILTERS */}
       <div className="card p-4 flex flex-wrap gap-3">
+
+        {/* SEARCH */}
         <div className="relative flex-1 min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="input-field pl-9 w-full" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input-field pl-9 w-full"
+          />
         </div>
-        <select className="select-field" value={filters.sector} onChange={e => setFilters(f => ({ ...f, sector: e.target.value }))}>
-          <option value="All">All Sectors</option>
-          <option value="IT">IT</option>
-          <option value="Core">Core</option>
-          <option value="Finance">Finance</option>
-        </select>
-        <select className="select-field" value={filters.branch} onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}>
-          <option value="All">All Branches</option>
-          {['CSE', 'CSBS', 'ECE', 'EEE', 'MECH'].map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
+
+        {/* 🔥 SECTOR BUTTONS (FIXED UI) */}
+        {["All", "IT", "Core", "Finance"].map((sector) => (
+          <button
+            key={sector}
+            onClick={() => setSelectedSector(sector)}
+            className={`px-4 py-1.5 rounded-lg border text-sm ${
+              selectedSector === sector
+                ? "bg-primary text-white"
+                : "text-gray-500"
+            }`}
+          >
+            {sector}
+          </button>
+        ))}
       </div>
 
-      {/* Grid View Rendering */}
+      {/* GRID VIEW */}
       {view === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filtered.map(company => (
+          {filteredCompanies.map(company => (
             <div
               key={company.companyID}
               onClick={() => navigate(`/companies/${company.companyID}`)}
@@ -104,11 +146,15 @@ export default function CompanyList() {
                   {company.companyName?.[0]}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <div className="font-bold text-sm truncate">{company.companyName}</div>
-                  <div className="text-xs text-gray-400">{company.companySector}</div>
+                  <div className="font-bold text-sm truncate">
+                    {company.companyName}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {company.companySector}
+                  </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2 text-sm border-t pt-3">
                 <div>
                   <div className="text-[10px] uppercase text-gray-400">Avg CTC</div>
@@ -124,10 +170,10 @@ export default function CompanyList() {
         </div>
       )}
 
-      {/* List View Rendering */}
+      {/* LIST VIEW */}
       {view === 'list' && (
         <DataTable
-          data={filtered}
+          data={filteredCompanies}
           columns={columns}
           onRowClick={(row) => navigate(`/companies/${row.companyID}`)}
         />
@@ -135,3 +181,4 @@ export default function CompanyList() {
     </div>
   );
 }
+//console.log(companies);

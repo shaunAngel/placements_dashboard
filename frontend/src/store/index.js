@@ -74,7 +74,25 @@ export const useCompanyStore = create((set) => ({
     try {
       const res = await fetch("http://127.0.0.1:8000/api/companies");
       const data = await res.json();
-      set({ companies: data });
+  
+      // 🔥 NORMALIZE SECTOR HERE (MAIN FIX)
+      const normalized = data.map((c) => {
+        let sector = c.companySector?.toUpperCase() || "";
+  
+        if (sector.includes("IT")) sector = "IT";
+        else if (sector.includes("CORE")) sector = "Core";
+        else if (sector.includes("BFSI") || sector.includes("FINANCE")) sector = "Finance";
+        else if (sector.includes("STARTUP")) sector = "Startup";
+        else sector = "Other";
+  
+        return {
+          ...c,
+          companySector: sector,
+        };
+      });
+  
+      set({ companies: normalized });
+  
     } catch (err) {
       console.error("Error fetching companies:", err);
     }
