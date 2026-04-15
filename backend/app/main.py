@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routes import company, drive, stats
-from app.routes import students, branch, batch, leaderboard
+from app.routes import students, branch, batch
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -20,7 +20,6 @@ app.include_router(stats.router, prefix="/api/stats")
 app.include_router(students.router, prefix="/api/students")
 app.include_router(branch.router, prefix="/api/branches")
 app.include_router(batch.router, prefix="/api/batch")
-app.include_router(leaderboard.router, prefix="/api/leaderboard")
 
 
 @app.get("/")

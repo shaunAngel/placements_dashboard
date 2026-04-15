@@ -42,14 +42,14 @@ export default function StudentReport() {
       label: 'Status',
       render: (v) => <span className={`badge ${getStatusColor(v)}`}>{v}</span>,
     },
-    { key: 'company', label: 'Company', render: v => v || '—' },
+    { key: 'Company', label: 'Company', render: v => v || '—' },
     {
       key: 'package',
       label: 'Package',
       accessor: r => r.package,
       render: (v, row) => v ? <span className="font-bold text-accent">{v.toFixed(2)} LPA</span> : '—',
     },
-    { key: 'offerType', label: 'Offer Type', render: v => v ? <span className="badge badge-primary">{v}</span> : '—' },
+    { key: 'role', label: 'Offer Type', render: v => v ? <span className="badge badge-primary">{v}</span> : '—' },
     {
       key: 'offerDate',
       label: 'Offer Date',

@@ -69,7 +69,7 @@ export default function Dashboard() {
     { label: "Total Selected", value: overview?.totalSelected || 0 },
     {
       label: "Placement %",
-      value: overview ? `${overview.placementPercentage}%` : "0%",
+      value: overview ? `${Number(overview.placementPercentage).toFixed(2)}%` : "0%",
     },
   ];
 

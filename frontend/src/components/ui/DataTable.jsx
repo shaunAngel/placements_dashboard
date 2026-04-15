@@ -40,17 +40,28 @@ export default function DataTable({
   }, [data, search, columns]);
 
   const sorted = useMemo(() => {
-    if (!sortCol) return filtered;
-    return [...filtered].sort((a, b) => {
-      const col = columns.find(c => c.key === sortCol);
-      const aVal = col?.accessor ? col.accessor(a) : a[sortCol];
-      const bVal = col?.accessor ? col.accessor(b) : b[sortCol];
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-      const cmp = typeof aVal === 'number' ? aVal - bVal : String(aVal).localeCompare(String(bVal));
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-  }, [filtered, sortCol, sortDir, columns]);
+  if (!sortCol) return filtered;
+  
+  return [...filtered].sort((a, b) => {
+    const col = columns.find(c => c.key === sortCol);
+    const aVal = col?.accessor ? col.accessor(a) : a[sortCol];
+    const bVal = col?.accessor ? col.accessor(b) : b[sortCol];
+
+    if (aVal === null || aVal === undefined) return 1;
+    if (bVal === null || bVal === undefined) return -1;
+
+    // IMPROVED: Check if the values can be treated as numbers
+    const numA = parseFloat(aVal);
+    const numB = parseFloat(bVal);
+    
+    // If both are valid numbers, sort numerically
+    const isNum = !isNaN(numA) && !isNaN(numB) && typeof aVal !== 'boolean';
+    
+    const cmp = isNum ? numA - numB : String(aVal).localeCompare(String(bVal));
+    
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+}, [filtered, sortCol, sortDir, columns]);
 
   const totalPages = Math.ceil(sorted.length / pageSize);
   const paged = sorted.slice(page * pageSize, (page + 1) * pageSize);
