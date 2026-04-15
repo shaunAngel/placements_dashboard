@@ -1,0 +1,15 @@
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = MongoClient(os.getenv("MONGO_URI"))
+db = client["placementsDB"]
+
+company_collection = db["company_details"]
+drive_collection = db["company_records"]
+students_collection = db["students_data"]
+batch_collection = db["batch_reports"]
+branch_collection = db["branch_reports"]
+leaderboard_collection = db["leaderboard"]
