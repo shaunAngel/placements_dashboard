@@ -117,7 +117,7 @@ export default function CompanyList() {
         </div>
 
         {/* 🔥 SECTOR BUTTONS (FIXED UI) */}
-        {["All", "IT", "Core", "Finance"].map((sector) => (
+        {["All", "IT", "IT Prod" ,"Core", "Finance"].map((sector) => (
           <button
             key={sector}
             onClick={() => setSelectedSector(sector)}

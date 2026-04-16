@@ -11,13 +11,26 @@ export default function StudentReport() {
 
   const filtered = useMemo(() => {
     let list = students;
-    if (filters.branch !== 'All') list = list.filter(s => s.branch === filters.branch);
-    if (filters.batch !== 'All') list = list.filter(s => s.batch === filters.batch);
-    if (filters.status !== 'All') list = list.filter(s => s.status === filters.status);
+
+    if (filters.branch !== 'All')
+      list = list.filter(s => s.branch?.trim() === filters.branch);
+
+    if (filters.batch !== 'All')
+      list = list.filter(s => s.batch === Number(filters.batch));
+
+    if (filters.status !== 'All')
+      list = list.filter(s =>
+        s.status?.replace(',', '').trim() === filters.status
+      );
+
     return list;
   }, [students, filters]);
 
-  const branches = [...new Set(students.map(s => s.branch))];
+  const branches = [
+    ...new Set(
+      students.map(s => s.branch?.replace(',', '').trim())
+    )
+  ];
   const batches = [...new Set(students.map(s => s.batch))];
 
   const columns = [
@@ -79,7 +92,7 @@ export default function StudentReport() {
           <select className="select-field w-auto" value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
             <option value="All">All Status</option>
             <option value="Placed">Placed</option>
-            <option value="Unplaced">Unplaced</option>
+            <option value="Not Placed">Not Placed</option>
             <option value="PPO">PPO</option>
             <option value="Intern">Intern</option>
           </select>
@@ -93,7 +106,7 @@ export default function StudentReport() {
         onRowClick={setSelectedStudent}
         rowClassName={(row) =>
           row.status === 'Placed' ? 'border-l-2 border-l-success' :
-          row.status === 'Unplaced' ? '' : 'border-l-2 border-l-accent'
+            row.status === 'Unplaced' ? '' : 'border-l-2 border-l-accent'
         }
       />
 

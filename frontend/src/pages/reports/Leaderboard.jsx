@@ -8,13 +8,13 @@ export default function Leaderboard() {
   const [branch, setBranch] = useState('All');
   const [batch, setBatch] = useState('All');
 
-const ranked = useMemo(() => {
+  const ranked = useMemo(() => {
     // 1. Filter out students without a package
     let list = students.filter(s => s.package !== null && s.package !== undefined);
 
     // 2. Apply your filters
     if (branch !== 'All') list = list.filter(s => s.branch === branch);
-    if (batch !== 'All') list = list.filter(s => s.batch === batch);
+    if (batch !== 'All') list = list.filter(s => Number(s.batch) === Number(batch));
 
     // 3. CRITICAL: Numerical Sort
     return [...list].sort((a, b) => {
@@ -59,16 +59,16 @@ const ranked = useMemo(() => {
       ),
     },
     { key: 'branch', label: 'Branch' },
-  { key: 'batch', label: 'Batch' },
-  { 
-    key: 'Company', // Changed from 'company' to match your DB image
-    label: 'Company' 
-  },
-  {
-    key: 'package',
-    label: 'Package (LPA)',
-    accessor: r => r.package,
-    render: (v, row) => {
+    { key: 'batch', label: 'Batch' },
+    {
+      key: 'Company', // Changed from 'company' to match your DB image
+      label: 'Company'
+    },
+    {
+      key: 'package',
+      label: 'Package (LPA)',
+      accessor: r => r.package,
+      render: (v, row) => {
         const idx = ranked.indexOf(row) + 1;
         return (
           <span className={`font-bold text-lg ${idx <= 3 ? 'text-accent' : 'text-primary'}`}>
@@ -76,16 +76,18 @@ const ranked = useMemo(() => {
           </span>
         );
       },
-  },
-  { 
-    key: 'role', // Your DB uses 'role' for the offer type
-    label: 'Offer Type', 
-    render: v => v ? <span className="badge badge-primary">{v}</span> : '—' 
-  },
+    },
+    {
+      key: 'role', // Your DB uses 'role' for the offer type
+      label: 'Offer Type',
+      render: v => v ? <span className="badge badge-primary">{v}</span> : '—'
+    },
   ];
 
   const uniqueBranches = [...new Set(students.map(s => s.branch))];
-  const uniqueBatches = [...new Set(students.map(s => s.batch))];
+  const uniqueBatches = [
+    ...new Set(students.map(s => Number(s.batch)))
+  ];
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -100,46 +102,46 @@ const ranked = useMemo(() => {
       <div className="card">
         <h2 className="section-title mb-4">Top 3 Achievers</h2>
         <div className="flex items-end justify-center gap-6">
-  {/* The array defines the visual order: Left (Rank 1), Center (Rank 0), Right (Rank 2) */}
-  {[1, 0, 2].map((rankIndex, visualIndex) => {
-    const student = ranked[rankIndex];
-    if (!student) return null;
+          {/* The array defines the visual order: Left (Rank 1), Center (Rank 0), Right (Rank 2) */}
+          {[1, 0, 2].map((rankIndex, visualIndex) => {
+            const student = ranked[rankIndex];
+            if (!student) return null;
 
-    // We map the visual position (0, 1, 2) to specific styles
-    // visualIndex 0 = Left (Silver), 1 = Center (Gold), 2 = Right (Bronze)
-    const podiumStyles = [
-      { label: '2nd', height: 'h-24', color: '#9CA3AF' }, // Left
-      { label: '1st', height: 'h-32', color: '#F5A623' }, // Center
-      { label: '3rd', height: 'h-20', color: '#CD7F32' }, // Right
-    ];
+            // We map the visual position (0, 1, 2) to specific styles
+            // visualIndex 0 = Left (Silver), 1 = Center (Gold), 2 = Right (Bronze)
+            const podiumStyles = [
+              { label: '2nd', height: 'h-24', color: '#9CA3AF' }, // Left
+              { label: '1st', height: 'h-32', color: '#F5A623' }, // Center
+              { label: '3rd', height: 'h-20', color: '#CD7F32' }, // Right
+            ];
 
-    const style = podiumStyles[visualIndex];
+            const style = podiumStyles[visualIndex];
 
-    return (
-      <div key={rankIndex} className="flex flex-col items-center gap-2">
-        {/* Avatar */}
-        <div 
-          className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white"
-          style={{ backgroundColor: generateAvatarColor(student.name) }}
-        >
-          {getInitials(student.name)}
-        </div>
+            return (
+              <div key={rankIndex} className="flex flex-col items-center gap-2">
+                {/* Avatar */}
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white"
+                  style={{ backgroundColor: generateAvatarColor(student.name) }}
+                >
+                  {getInitials(student.name)}
+                </div>
 
-          {/* Info */}
-          <div className="text-center">
-            <div className="font-bold text-primary text-sm line-clamp-1 w-24">{student.name}</div>
-            <div className="text-xs text-gray-400">{student.branch}</div>
-            <div className="font-bold text-accent">{student.package?.toFixed(1)} LPA</div>
-          </div>
+                {/* Info */}
+                <div className="text-center">
+                  <div className="font-bold text-primary text-sm line-clamp-1 w-24">{student.name}</div>
+                  <div className="text-xs text-gray-400">{student.branch}</div>
+                  <div className="font-bold text-accent">{student.package?.toFixed(1)} LPA</div>
+                </div>
 
-          {/* The Bar */}
-          <div
-            className={`w-24 rounded-t-lg flex items-center justify-center font-bold text-white text-sm ${style.height}`}
-            style={{ backgroundColor: style.color }}
-          >
-            {style.label}
-          </div>
-        </div>
+                {/* The Bar */}
+                <div
+                  className={`w-24 rounded-t-lg flex items-center justify-center font-bold text-white text-sm ${style.height}`}
+                  style={{ backgroundColor: style.color }}
+                >
+                  {style.label}
+                </div>
+              </div>
             );
           })}
         </div>

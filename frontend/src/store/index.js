@@ -11,7 +11,7 @@ export const useAuthStore = create((set) => ({
       email: data.email,
       role: data.role,
     };
-  
+
     // ✅ Map demo email to real DB student
     if (
       data.email === "student@vnrjiet.ac.in" ||
@@ -20,12 +20,12 @@ export const useAuthStore = create((set) => ({
       user.rollNo = "22071A3243";
       user.name = "S GAYATHRI";
     }
-  
+
     set({
       user,
       isAuthenticated: true,
     });
-  
+
     return { success: true };
   },
 
@@ -74,25 +74,26 @@ export const useCompanyStore = create((set) => ({
     try {
       const res = await fetch("http://127.0.0.1:8000/api/companies");
       const data = await res.json();
-  
+
       // 🔥 NORMALIZE SECTOR HERE (MAIN FIX)
       const normalized = data.map((c) => {
         let sector = c.companySector?.toUpperCase() || "";
-  
-        if (sector.includes("IT")) sector = "IT";
+        
+        if (sector.includes("IT PROD")) sector = "IT Prod";
+        else if (sector.includes("IT")) sector = "IT";
         else if (sector.includes("CORE")) sector = "Core";
         else if (sector.includes("BFSI") || sector.includes("FINANCE")) sector = "Finance";
         else if (sector.includes("STARTUP")) sector = "Startup";
         else sector = "Other";
-  
+
         return {
           ...c,
           companySector: sector,
         };
       });
-  
+
       set({ companies: normalized });
-  
+
     } catch (err) {
       console.error("Error fetching companies:", err);
     }
