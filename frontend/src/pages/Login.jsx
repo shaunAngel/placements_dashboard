@@ -34,12 +34,11 @@ export default function Login() {
   const onSubmit = async (data) => {
     setLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 600));
-    const result = login(data);
+    const result = await login(data);
     if (result.success) {
       navigate('/dashboard');
     } else {
-      setError('Invalid credentials. Use password: vnrvjiet@123');
+      setError(result.error || 'Invalid credentials. Please try again.');
     }
     setLoading(false);
   };

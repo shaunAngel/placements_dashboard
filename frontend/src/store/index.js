@@ -1,46 +1,78 @@
 import { create } from "zustand";
+import axios from "axios";
+import { authAPI } from "../api";
 
 
-// 🔐 AUTH STORE
-export const useAuthStore = create((set) => ({
+// 🔐 AUTH STORE — real JWT authentication
+export const useAuthStore = create((set, get) => ({
   user: null,
+  token: null,
   isAuthenticated: false,
+  isLoading: true,  // true while checking saved session on app boot
 
-  login: (data) => {
-    let user = {
-      email: data.email,
-      role: data.role,
-    };
+  // ── Login via backend /auth/login ──────────────────
+  login: async ({ email, password, role }) => {
+    try {
+      const data = await authAPI.login(email, password, role);
+      // data = { access_token, token_type, user: { email, role, name, rollNo } }
 
-    // ✅ Map demo email to real DB student
-    if (
-      data.email === "student@vnrjiet.ac.in" ||
-      data.email === "sudigayathri2@gmail.com"
-    ) {
-      user.rollNo = "22071A3243";
-      user.name = "S GAYATHRI";
+      localStorage.setItem("access_token", data.access_token);
+
+      set({
+        user: data.user,
+        token: data.access_token,
+        isAuthenticated: true,
+      });
+
+      return { success: true };
+    } catch (err) {
+      const detail =
+        err.response?.data?.detail || "Login failed. Please try again.";
+      return { success: false, error: detail };
     }
-
-    set({
-      user,
-      isAuthenticated: true,
-    });
-
-    return { success: true };
   },
 
-  logout: () =>
+  // ── Logout — clear token and state ─────────────────
+  logout: () => {
+    localStorage.removeItem("access_token");
     set({
       user: null,
+      token: null,
       isAuthenticated: false,
-    }),
+    });
+  },
+
+  // ── Restore session from saved token ───────────────
+  restoreSession: async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      set({ isLoading: false });
+      return;
+    }
+
+    try {
+      const user = await authAPI.getMe(token);
+      set({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch {
+      // Token invalid or expired
+      localStorage.removeItem("access_token");
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    }
+  },
 }));
 
 
 // 👨‍🎓 STUDENT STORE
-//import { create } from "zustand";
-import axios from "axios";
-
 export const useStudentStore = create((set) => ({
   students: [],
   loading: false,

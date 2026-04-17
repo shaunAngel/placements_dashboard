@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import Login from './pages/Login';
@@ -17,10 +17,6 @@ import Profile from './pages/Profile';
 import UserManagement from './pages/admin/UserManagement';
 import AdminSettings from './pages/admin/AdminSettings';
 import { useAuthStore } from './store';
-
-// 🔥 OPTIONAL: set base API URL globally
-import axios from "axios";
-axios.defaults.baseURL = "http://127.0.0.1:8000/api";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -41,7 +37,29 @@ function ProtectedRoute({ children, allowedRoles }) {
   return children;
 }
 
+// 🔄 Loading spinner shown while session is being restored
+function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted">
+      <div className="text-center">
+        <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-gray-500 text-sm">Loading your session…</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const { isLoading, restoreSession } = useAuthStore();
+
+  // Restore JWT session on app boot
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
+
+  // Show loading spinner while checking saved token
+  if (isLoading) return <AuthLoading />;
+
   return (
     <BrowserRouter>
       <Routes>
