@@ -1,10 +1,10 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
-MONGO_URL = "mongodb+srv://abhiramaleti18_db_user:abhi18abhi18@cluster0.fuisl8t.mongodb.net/"
-client = MongoClient(MONGO_URL)
+client = MongoClient(os.getenv("MONGO_URI"))
 db = client["placementsDB"]
 
 company_collection = db["company_details"]
