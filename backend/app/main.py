@@ -3,6 +3,9 @@ from app.routes import company, drive, stats, users, auth
 from fastapi.staticfiles import StaticFiles
 from app.routes import students, branch, batch
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import offer
+from app.routes import settings
+from app.routes import notifications
 
 app = FastAPI()
 app.add_middleware(
@@ -14,6 +17,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router) 
+app.include_router(offer.router, prefix="/api/offer")
+app.include_router(settings.router, prefix="/api")
+app.include_router(notifications.router)
 app.include_router(company.router, prefix="/api/companies")
 app.include_router(drive.router, prefix="/api/drives")
 app.include_router(stats.router, prefix="/api/stats")
