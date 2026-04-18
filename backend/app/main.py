@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes import auth 
-from app.routes import company, drive, stats
+from app.routes import company, drive, stats, users, auth
+from fastapi.staticfiles import StaticFiles
 from app.routes import students, branch, batch
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,6 +20,8 @@ app.include_router(stats.router, prefix="/api/stats")
 app.include_router(students.router, prefix="/api/students")
 app.include_router(branch.router, prefix="/api/branches")
 app.include_router(batch.router, prefix="/api/batch")
+app.include_router(users.router, prefix="/api/users")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")

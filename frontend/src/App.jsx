@@ -17,6 +17,7 @@ import Profile from './pages/Profile';
 import UserManagement from './pages/admin/UserManagement';
 import AdminSettings from './pages/admin/AdminSettings';
 import { useAuthStore } from './store';
+import PlacementChatbot from './pages/PlacementChatbot';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, user } = useAuthStore();
@@ -50,19 +51,19 @@ function AuthLoading() {
 }
 
 export default function App() {
-  const { isLoading, restoreSession } = useAuthStore();
-
+  const { isLoading, restoreSession, user, isAuthenticated } = useAuthStore();
   // Restore JWT session on app boot
   useEffect(() => {
     restoreSession();
   }, [restoreSession]);
 
-  // Show loading spinner while checking saved token
   if (isLoading) return <AuthLoading />;
 
   return (
     <BrowserRouter>
+      {isAuthenticated && user?.role === 'Student' && <PlacementChatbot />}
       <Routes>
+
         <Route path="/login" element={<Login />} />
 
         <Route path="/" element={<AppLayout />}>

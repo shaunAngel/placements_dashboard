@@ -2,26 +2,77 @@ import React, { useState } from 'react';
 import { useUserStore } from '../../store';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
-import { Plus, UserCheck, UserX } from 'lucide-react';
+import { Plus, UserCheck, UserX, Trash2, Edit } from 'lucide-react';
 
 const ROLES = ['Admin', 'Staff', 'Faculty', 'Student'];
 
 export default function UserManagement() {
-  const { users, addUser, deactivateUser, updateUser } = useUserStore();
+  const {
+    users, addUser, fetchUsers, updateUser, deleteUser,
+    selectedUser, setSelectedUser, isModalOpen, closeModal
+  } = useUserStore();
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', role: 'Student', branch: '', status: 'Active' });
+  const [form, setForm] = useState({
+    name: '', email: '', role: 'Student', branch: '', status: 'Active', rollNo: ''
+  });
 
-  const handleAddUser = (e) => {
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  React.useEffect(() => {
+    if (selectedUser) {
+      setForm({ ...selectedUser });
+    } else {
+      setForm({ name: '', email: '', role: 'Student', branch: '', status: 'Active', rollNo: '' });
+    }
+  }, [selectedUser]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addUser({ id: `u${Date.now()}`, ...form });
-    setShowAdd(false);
-    setForm({ name: '', email: '', role: 'Student', branch: '', status: 'Active' });
+
+    if (selectedUser) {
+      // EDIT MODE: Use the email from the selected user as the key
+      const result = await updateUser(selectedUser.email, form);
+      if (!result.success) alert(result.error);
+    } else {
+      // ADD MODE
+      const result = await addUser(form);
+      if (result.success) {
+        setShowAdd(false); // If using your old local state
+      } else {
+        alert(result.error);
+      }
+    }
+    closeModal(); // Clears selectedUser and closes modal
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    const result = await addUser({ ...form });
+
+    if (result.success) {
+      setShowAdd(false);
+      setForm({ name: '', email: '', role: 'Student', branch: '', status: 'Active', rollNo: '' });
+    } else {
+      alert(result.error);
+    }
+  };
+  const onEdit = (user) => {
+    // 1. Set the selected user in the store
+    // 2. This should also set a boolean like 'isModalOpen' to true
+    setSelectedUser(user);
   };
 
   const columns = [
     {
       key: 'name', label: 'Name',
-      render: (v) => <span className="font-semibold text-primary">{v}</span>,
+      render: (v, row) => (
+        <div>
+          <div className="font-semibold text-primary">{v}</div>
+          {row.rollNo && <div className="text-[10px] text-gray-400">{row.rollNo}</div>}
+        </div>
+      ),
     },
     { key: 'email', label: 'Email' },
     {
@@ -41,19 +92,30 @@ export default function UserManagement() {
       key: 'actions', label: 'Actions', sortable: false,
       render: (_, row) => (
         <div className="flex gap-2">
+          {/* Edit Button */}
           <button
-            onClick={(e) => { e.stopPropagation(); deactivateUser(row.id); }}
-            className="text-error hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-            title="Deactivate"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(row); // This function opens your modal and sets the current user
+            }}
+            className="text-primary hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
+            title="Edit User"
           >
-            <UserX size={14} />
+            <Edit size={16} />
           </button>
+
+          {/* Delete Button */}
           <button
-            onClick={(e) => { e.stopPropagation(); updateUser(row.id, { status: 'Active' }); }}
-            className="text-success hover:bg-green-50 p-1.5 rounded-lg transition-colors"
-            title="Activate"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Are you sure you want to delete ${row.name}?`)) {
+                deleteUser(row.email);
+              }
+            }}
+            className="text-error hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+            title="Delete User"
           >
-            <UserCheck size={14} />
+            <Trash2 size={16} />
           </button>
         </div>
       ),
@@ -88,8 +150,12 @@ export default function UserManagement() {
       <DataTable data={users} columns={columns} filename="users" />
 
       {/* Add User Modal */}
-      <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title="Add New User">
-        <form onSubmit={handleAddUser} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen || showAdd}
+        onClose={() => { setShowAdd(false); closeModal(); }}
+        title={selectedUser ? "Edit User" : "Add New User"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name *</label>
             <input
@@ -111,9 +177,25 @@ export default function UserManagement() {
               placeholder="email@vnrvjiet.ac.in"
             />
           </div>
+          {form.role === 'Student' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Roll Number *</label>
+              <input
+                required
+                value={form.rollNo}
+                onChange={e => setForm(f => ({ ...f, rollNo: e.target.value.toUpperCase() }))}
+                className="input-field"
+                placeholder="22071A3243"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role *</label>
-            <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="select-field">
+            <select
+              value={form.role}
+              onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
+              className="select-field"
+            >
               {ROLES.map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
@@ -121,12 +203,14 @@ export default function UserManagement() {
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Branch (if applicable)</label>
             <select value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} className="select-field">
               <option value="">None</option>
-              {['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'IT', 'CHEM'].map(b => <option key={b}>{b}</option>)}
+              {['CSE', 'CSBS'].map(b => <option key={b}>{b}</option>)}
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={() => setShowAdd(false)} className="btn-outline">Cancel</button>
-            <button type="submit" className="btn-primary">Add User</button>
+            <button type="submit" className="btn-primary">
+              {selectedUser ? "Update User" : "Add User"}
+            </button>
           </div>
         </form>
       </Modal>

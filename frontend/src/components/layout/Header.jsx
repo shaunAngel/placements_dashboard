@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Search, LogOut, User, ChevronDown } from 'lucide-react';
-import { useAuthStore, useNotificationStore } from '../../store';
+import { useAuthStore, useNotificationStore, useStudentStore } from '../../store';
 
 export default function Header({ sidebarWidth }) {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { students } = useStudentStore();
   const { notifications, markAsRead, markAllRead, getUnreadCount } = useNotificationStore();
   const [showNotif, setShowNotif] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -15,6 +16,10 @@ export default function Header({ sidebarWidth }) {
   const userRef = useRef(null);
 
   const unread = getUnreadCount();
+
+  const student =
+    students.find((s) => s.rollNo === user?.rollNo) ||
+    students.find((s) => s.email === user?.email);
 
   useEffect(() => {
     const handler = (e) => {
@@ -144,9 +149,18 @@ export default function Header({ sidebarWidth }) {
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
-              {user?.name?.[0] || 'U'}
-            </div>
+            {/* ✅ Updated Avatar Logic */}
+            {student?.profileImage ? (
+              <img
+                src={`http://localhost:8000${student.profileImage}`}
+                className="w-8 h-8 rounded-full object-cover border border-border"
+                alt="Profile"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+                {user?.name?.[0] || 'U'}
+              </div>
+            )}
             <div className="hidden md:block text-left">
               <div className="text-sm font-semibold text-primary leading-tight">{user?.name}</div>
               <div className="text-xs text-gray-400">{user?.role}</div>

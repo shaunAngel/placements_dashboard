@@ -40,10 +40,19 @@ export default function StudentReport() {
       label: 'Name',
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-            style={{ backgroundColor: generateAvatarColor(row.name) }}>
-            {getInitials(row.name)}
-          </div>
+          {/* ✅ Check for profileImage first */}
+          {row.profileImage ? (
+            <img
+              src={`http://localhost:8000${row.profileImage}`}
+              className="w-7 h-7 rounded-full object-cover border border-gray-200 flex-shrink-0"
+              alt={row.name}
+            />
+          ) : (
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+              style={{ backgroundColor: generateAvatarColor(row.name) }}>
+              {getInitials(row.name)}
+            </div>
+          )}
           <span className="font-medium text-primary">{row.name}</span>
         </div>
       ),
@@ -115,26 +124,37 @@ export default function StudentReport() {
         {selectedStudent && (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg"
-                style={{ backgroundColor: generateAvatarColor(selectedStudent.name) }}>
-                {getInitials(selectedStudent.name)}
-              </div>
+              {selectedStudent.profileImage ? (
+                <img
+                  src={`http://localhost:8000${selectedStudent.profileImage}`}
+                  className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-white"
+                  alt={selectedStudent.name}
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg"
+                  style={{ backgroundColor: generateAvatarColor(selectedStudent.name) }}>
+                  {getInitials(selectedStudent.name)}
+                </div>
+              )}
               <div>
                 <h3 className="text-xl font-bold text-primary">{selectedStudent.name}</h3>
-                <div className="text-gray-500 text-sm">{selectedStudent.rollNo} · {selectedStudent.branch} · {selectedStudent.batch}</div>
-                <span className={`badge mt-1 ${getStatusColor(selectedStudent.status)}`}>{selectedStudent.status}</span>
+                <div className="text-gray-500 text-sm">
+                  {selectedStudent.rollNo} · {selectedStudent.branch} · {selectedStudent.batch}
+                </div>
+                <span className={`badge mt-1 ${getStatusColor(selectedStudent.status)}`}>
+                  {selectedStudent.status}
+                </span>
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               {[
                 ['Email', selectedStudent.email],
-                ['Contact', selectedStudent.contact],
-                ['CGPA', selectedStudent.cgpa],
-                ['Company', selectedStudent.company || '—'],
+                ['Contact', selectedStudent.mobile || '—'],
+                ['CGPA', selectedStudent.cgpa41 || selectedStudent.cgpa32 || '—'],
+                ['Company', selectedStudent.Company || '—'],
                 ['Package', selectedStudent.package ? `${selectedStudent.package.toFixed(2)} LPA` : '—'],
-                ['Offer Type', selectedStudent.offerType || '—'],
-                ['Offer Date', formatDate(selectedStudent.offerDate)],
-                ['Location', '—'],
+                ['Offer Type', selectedStudent.role || '—'],
               ].map(([k, v]) => (
                 <div key={k}>
                   <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{k}</div>
