@@ -12,9 +12,9 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-muted flex">
       <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen transition-all duration-300">
-        <Header sidebarWidth="16rem" />
-        <main className="flex-1 pt-[72px] p-6 animate-fade-in">
+      <div className="flex-1 ml-0 lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
+        <Header sidebarWidth="0" />
+        <main className="flex-1 pt-[72px] p-3 sm:p-6 animate-fade-in">
           <Breadcrumbs />
           <Outlet />
         </main>

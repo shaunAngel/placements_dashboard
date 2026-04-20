@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { useUserStore } from '../../store';
+import { useUserStore, useSettingStore } from '../../store';
 import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 import { Plus, UserCheck, UserX, Trash2, Edit } from 'lucide-react';
 
-const ROLES = ['Admin', 'Staff', 'Faculty', 'Student'];
+const ROLES = ['Admin', 'Faculty', 'Student'];
 
 export default function UserManagement() {
   const {
     users, addUser, fetchUsers, updateUser, deleteUser,
     selectedUser, setSelectedUser, isModalOpen, closeModal
   } = useUserStore();
+  const { branches } = useSettingStore();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
     name: '', email: '', role: 'Student', branch: '', status: 'Active', rollNo: ''
@@ -47,20 +48,7 @@ export default function UserManagement() {
     closeModal(); // Clears selectedUser and closes modal
   };
 
-  const handleAddUser = async (e) => {
-    e.preventDefault();
-    const result = await addUser({ ...form });
-
-    if (result.success) {
-      setShowAdd(false);
-      setForm({ name: '', email: '', role: 'Student', branch: '', status: 'Active', rollNo: '' });
-    } else {
-      alert(result.error);
-    }
-  };
   const onEdit = (user) => {
-    // 1. Set the selected user in the store
-    // 2. This should also set a boolean like 'isModalOpen' to true
     setSelectedUser(user);
   };
 
@@ -78,7 +66,7 @@ export default function UserManagement() {
     {
       key: 'role', label: 'Role',
       render: (v) => (
-        <span className={`badge ${v === 'Admin' ? 'badge-error' : v === 'Staff' ? 'badge-accent' : v === 'Faculty' ? 'badge-primary' : 'badge-gray'}`}>
+        <span className={`badge ${v === 'Admin' ? 'badge-error' : v === 'Faculty' ? 'badge-primary' : 'badge-gray'}`}>
           {v}
         </span>
       ),
@@ -96,7 +84,7 @@ export default function UserManagement() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onEdit(row); // This function opens your modal and sets the current user
+              onEdit(row);
             }}
             className="text-primary hover:bg-blue-50 p-1.5 rounded-lg transition-colors"
             title="Edit User"
@@ -124,10 +112,10 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h1 className="page-title">User Management</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Manage students, faculty, staff and admin accounts</p>
+          <p className="text-gray-500 text-sm mt-0.5">Manage students, faculty, and admin accounts</p>
         </div>
         <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-1.5">
           <Plus size={16} /> Add User
@@ -135,7 +123,7 @@ export default function UserManagement() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {ROLES.map(role => {
           const count = users.filter(u => u.role === role).length;
           return (
@@ -203,11 +191,11 @@ export default function UserManagement() {
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Branch (if applicable)</label>
             <select value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} className="select-field">
               <option value="">None</option>
-              {['CSE', 'CSBS'].map(b => <option key={b}>{b}</option>)}
+              {branches.filter(b => b && String(b).trim() !== '').map(b => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={() => setShowAdd(false)} className="btn-outline">Cancel</button>
+            <button type="button" onClick={() => { setShowAdd(false); closeModal(); }} className="btn-outline">Cancel</button>
             <button type="submit" className="btn-primary">
               {selectedUser ? "Update User" : "Add User"}
             </button>

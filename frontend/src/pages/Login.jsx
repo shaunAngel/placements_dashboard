@@ -14,7 +14,6 @@ const schema = z.object({
 
 const DEMO_CREDENTIALS = [
   { role: 'Admin', email: 'admin@vnrvjiet.ac.in', label: 'Admin' },
-  { role: 'Staff', email: 'placement@vnrvjiet.ac.in', label: 'Placement Staff' },
   { role: 'Faculty', email: 'faculty@vnrvjiet.ac.in', label: 'Faculty' },
   { role: 'Student', email: 'student@vnrvjiet.ac.in', label: 'Student' },
 ];
@@ -51,7 +50,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-muted">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-muted">
       {/* Left Panel */}
       <div className="hidden lg:flex w-1/2 bg-primary flex-col justify-between p-12 relative overflow-hidden">
         {/* Decorative circles */}
@@ -105,7 +104,7 @@ export default function Login() {
       </div>
 
       {/* Right Panel — Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
@@ -124,7 +123,7 @@ export default function Login() {
           {/* Demo Quick Login */}
           <div className="mb-6">
             <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Quick Login (Demo)</div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {DEMO_CREDENTIALS.map(c => (
                 <button
                   key={c.role}
@@ -133,7 +132,7 @@ export default function Login() {
                   className="py-2 px-3 border border-border rounded-lg text-xs font-medium text-primary hover:border-primary hover:bg-muted transition-all text-left"
                 >
                   <span className="block font-semibold">{c.label}</span>
-                  <span className="text-gray-400 text-[10px]">{c.email}</span>
+                  <span className="text-gray-400 text-[10px] break-all">{c.email}</span>
                 </button>
               ))}
             </div>
@@ -146,7 +145,6 @@ export default function Login() {
               <select {...register('role')} className="select-field">
                 <option value="">Select Role</option>
                 <option value="Admin">Admin</option>
-                <option value="Staff">Placement Cell Staff</option>
                 <option value="Faculty">Faculty</option>
                 <option value="Student">Student</option>
               </select>

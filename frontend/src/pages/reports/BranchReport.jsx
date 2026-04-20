@@ -4,9 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import DataTable from '../../components/ui/DataTable';
+import { useSettingStore } from '../../store';
 
 export default function BranchReport() {
   const [branchData, setBranchData] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('All');
+  const { branches } = useSettingStore();
 
   useEffect(() => {
     axios
@@ -14,6 +17,11 @@ export default function BranchReport() {
       .then(res => setBranchData(res.data))
       .catch(err => console.error(err));
   }, []);
+
+  // Filter data based on selected branch
+  const filteredData = selectedBranch === 'All'
+    ? branchData
+    : branchData.filter(d => d.branch === selectedBranch);
 
   const columns = [
     { key: 'branch', label: 'Branch' },
@@ -63,24 +71,42 @@ export default function BranchReport() {
         </p>
       </div>
 
+      {/* Branch Filter */}
+      <div className="flex gap-3 flex-wrap">
+        <select
+          className="select-field w-auto"
+          value={selectedBranch}
+          onChange={e => setSelectedBranch(e.target.value)}
+        >
+          <option value="All">All Branches</option>
+          {branches.filter(b => b && String(b).trim() !== '').map(b => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="card">
         <h2 className="section-title mb-4">Branch Comparison</h2>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={branchData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="branch" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
+        {filteredData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={filteredData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="branch" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
 
-            <Bar dataKey="placed" name="Placed" fill="#1A3A6B" />
-            <Bar dataKey="totalStudents" name="Total" fill="#94a3b8" />
-          </BarChart>
-        </ResponsiveContainer>
+              <Bar dataKey="placed" name="Placed" fill="#1A3A6B" />
+              <Bar dataKey="totalStudents" name="Total" fill="#94a3b8" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-center py-12 text-gray-400 text-sm">No data available for selected branch</div>
+        )}
       </div>
 
-      <DataTable data={branchData} columns={columns} filename="branch-report" />
+      <DataTable data={filteredData} columns={columns} filename="branch-report" />
     </div>
   );
 }

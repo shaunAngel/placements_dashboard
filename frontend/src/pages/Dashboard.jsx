@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import { Link } from "react-router-dom";
-import { useStudentStore } from "../store";
+import { useStudentStore, useCompanyStore, useNotificationStore } from "../store";
 import { getInitials, generateAvatarColor } from "../utils/helpers";
 
 // KPI Card
@@ -22,7 +22,7 @@ function StudentAvatarCard({ student }) {
   const color = generateAvatarColor(student.name);
 
   return (
-    <div className="w-40 card text-center">
+    <div className="w-full sm:w-40 card text-center">
       <div
         className="w-12 h-12 mx-auto rounded-full flex items-center justify-center text-white font-bold"
         style={{ backgroundColor: color }}
@@ -40,13 +40,17 @@ function StudentAvatarCard({ student }) {
 
 export default function Dashboard() {
   const { students, fetchStudents } = useStudentStore();
+  const { fetchCompanies } = useCompanyStore();
+  const { fetchNotifications } = useNotificationStore();
 
   const [overview, setOverview] = React.useState(null);
   const [companyStats, setCompanyStats] = React.useState([]);
 
   // 🔥 FETCH EVERYTHING
   useEffect(() => {
-    fetchStudents(); // 👈 dynamic students
+    fetchStudents();
+    fetchCompanies();
+    fetchNotifications();
 
     const fetchStats = async () => {
       try {
@@ -97,7 +101,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpiData.map((kpi, i) => (
           <KpiCard key={i} {...kpi} />
         ))}
@@ -107,22 +111,26 @@ export default function Dashboard() {
       <div className="card">
         <h2 className="section-title mb-4">Top Companies</h2>
 
-        <ResponsiveContainer width="100%" height={350}>
-  <BarChart data={chartData} layout="vertical">
-    <CartesianGrid strokeDasharray="3 3" />
+        {chartData && chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
 
-    <XAxis type="number" />
-    <YAxis dataKey="company" type="category" width={120} />
+              <XAxis type="number" />
+              <YAxis dataKey="company" type="category" width={120} />
 
-    <Tooltip />
+              <Tooltip />
 
-    {/* 🔥 OFFERS */}
-    <Bar dataKey="offers" fill="#4CAF50" name="Offers" />
+              {/* 🔥 OFFERS */}
+              <Bar dataKey="offers" fill="#4CAF50" name="Offers" />
 
-    {/* 🔥 SELECTED */}
-    <Bar dataKey="selected" fill="#F5A623" name="Selected" />
-  </BarChart>
-</ResponsiveContainer>
+              {/* 🔥 SELECTED */}
+              <Bar dataKey="selected" fill="#F5A623" name="Selected" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-center py-12 text-gray-400 text-sm">No company data available</div>
+        )}
       </div>
 
       {/* 🔥 TOP STUDENTS (FIXED) */}
@@ -135,7 +143,7 @@ export default function Dashboard() {
         </div>
 
         {topStudents.length > 0 ? (
-          <div className="flex gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {topStudents.map((s, i) => (
               <StudentAvatarCard key={i} student={s} />
             ))}

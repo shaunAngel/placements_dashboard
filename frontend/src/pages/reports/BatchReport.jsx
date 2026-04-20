@@ -54,23 +54,27 @@ export default function BatchReport() {
       <div className="card">
         <h2 className="section-title mb-4">Placement Trend by Batch</h2>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="batch" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
+        {trendData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={trendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="batch" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
 
-            <Line
-              type="monotone"
-              dataKey="totalSelected"
-              name="Students Placed"
-              stroke="#1A3A6B"
-              strokeWidth={2.5}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              <Line
+                type="monotone"
+                dataKey="totalSelected"
+                name="Students Placed"
+                stroke="#1A3A6B"
+                strokeWidth={2.5}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="text-center py-12 text-gray-400 text-sm">No data available for batches</div>
+        )}
       </div>
 
       <DataTable data={batchData} columns={columns} filename="batch-report" />

@@ -73,8 +73,8 @@ def register(data: UserRegister):
             detail="User with this email already exists",
         )
 
-    # Validate role
-    valid_roles = ["Admin", "Staff", "Faculty", "Student"]
+    # Validate role — Staff removed
+    valid_roles = ["Admin", "Faculty", "Student"]
     if data.role not in valid_roles:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -115,8 +115,9 @@ def get_me(current_user: dict = Depends(get_current_user)):
 @router.post("/seed")
 def seed_demo_users():
     """
-    Seed the 4 demo users that match the Login.jsx quick-login buttons.
+    Seed the 3 demo users that match the Login.jsx quick-login buttons.
     Idempotent — skips users that already exist.
+    Staff role removed.
     """
     demo_users = [
         {
@@ -124,13 +125,6 @@ def seed_demo_users():
             "password": "vnrvjiet@123",
             "role": "Admin",
             "name": "Admin User",
-            "rollNo": "",
-        },
-        {
-            "email": "placement@vnrvjiet.ac.in",
-            "password": "vnrvjiet@123",
-            "role": "Staff",
-            "name": "Placement Staff",
             "rollNo": "",
         },
         {

@@ -36,8 +36,9 @@ async def update_student_profile(
         with open(file_path, "wb") as f:
             f.write(await profilePhoto.read())
             
-        # Save the URL/path in the database
-        update_data["profileImage"] = f"/{file_path}"
+        import time
+        # Save the URL/path in the database with a cache-busting timestamp
+        update_data["profileImage"] = f"/{file_path}?t={int(time.time())}"
     
     students_collection.update_one(
         {"rollNo": rollNo}, 

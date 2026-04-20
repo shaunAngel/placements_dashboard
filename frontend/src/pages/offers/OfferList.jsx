@@ -6,6 +6,7 @@ const OfferList = () => {
   const isAdmin = user?.role === "Admin";
 
   const [offers, setOffers] = useState([]);
+  const [viewedPdfs, setViewedPdfs] = useState(new Set());
 
   useEffect(() => {
     fetchOffers();
@@ -51,6 +52,7 @@ const OfferList = () => {
                 <th className="p-4 text-left">Company</th>
                 <th className="p-4 text-left">Package</th>
                 <th className="p-4 text-left">Status</th>
+                <th className="p-4 text-left">Document</th>
                 {isAdmin && <th className="p-4 text-left">Actions</th>}
               </tr>
             </thead>
@@ -80,23 +82,49 @@ const OfferList = () => {
                     </span>
                   </td>
 
+                  <td className="p-4">
+                    {o.file ? (
+                      <a
+                        href={`http://127.0.0.1:8000/${o.file}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => {
+                          const newSet = new Set(viewedPdfs);
+                          newSet.add(o.rollNo);
+                          setViewedPdfs(newSet);
+                        }}
+                        className="text-blue-600 hover:underline font-medium text-xs bg-blue-50 px-2 py-1 rounded"
+                      >
+                        View PDF
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 text-xs">No File</span>
+                    )}
+                  </td>
+
                   {isAdmin && (
                     <td className="p-4 flex gap-2">
                       {o.status === "pending" && (
                         <>
-                          <button
-                            onClick={() => approveOffer(o.rollNo)}
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Approve
-                          </button>
+                          {viewedPdfs.has(o.rollNo) ? (
+                            <>
+                              <button
+                                onClick={() => approveOffer(o.rollNo)}
+                                className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs"
+                              >
+                                Approve
+                              </button>
 
-                          <button
-                           onClick={() => rejectOffer(o.rollNo)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs"
-                          >
-                            Reject
-                          </button>
+                              <button
+                              onClick={() => rejectOffer(o.rollNo)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-orange-500 italic">View PDF to act</span>
+                          )}
                         </>
                       )}
                     </td>
