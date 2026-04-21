@@ -6,7 +6,7 @@ import { authAPI } from "../api";
 
 // 🔐 AUTH STORE — real JWT authentication
 export const useAuthStore = create(
-  persist( // 2. Wrap your store definition
+  persist(
     (set, get) => ({
       user: null,
       token: null,
@@ -17,8 +17,6 @@ export const useAuthStore = create(
         try {
           const data = await authAPI.login(email, password, role);
 
-          // Note: You don't technically need manual localStorage.setItem 
-          // anymore because 'persist' handles the whole object for you.
           set({
             user: data.user,
             token: data.access_token,
@@ -41,7 +39,7 @@ export const useAuthStore = create(
       },
 
       restoreSession: async () => {
-        const token = get().token; // Get token from the persisted state
+        const token = get().token;
         if (!token) {
           set({ isLoading: false });
           return;
@@ -56,7 +54,7 @@ export const useAuthStore = create(
       },
     }),
     {
-      name: "auth-storage", // 3. Unique key name in localStorage
+      name: "auth-storage",
     }
   )
 );
@@ -70,12 +68,10 @@ export const useStudentStore = create(
       loading: false,
       updateStudent: async (rollNo, formData) => {
         try {
-          // Replace with your actual backend URL
           const res = await axios.patch(`http://127.0.0.1:8000/api/students/${rollNo}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
-          // Update the local list of students with the returned data
           const updatedStudents = get().students.map((s) =>
             s.rollNo === rollNo ? res.data : s
           );
@@ -91,7 +87,6 @@ export const useStudentStore = create(
         try {
           const res = await axios.delete(`http://127.0.0.1:8000/api/students/${rollNo}/clear-pfp`);
 
-          // Update local state instantly
           const updatedStudents = get().students.map((s) =>
             s.rollNo === rollNo ? res.data : s
           );
@@ -119,8 +114,7 @@ export const useStudentStore = create(
       },
     }),
     {
-      // 3. ADD THIS CONFIGURATION OBJECT
-      name: "student-storage", // This is the key name in LocalStorage
+      name: "student-storage",
     }
   )
 );
@@ -139,7 +133,7 @@ export const useCompanyStore = create(
           const res = await fetch("http://127.0.0.1:8000/api/companies");
           const data = await res.json();
 
-          // ✅ NORMALIZE SECTOR HERE (MAIN FIX)
+          // ✅ NORMALIZE SECTOR HERE
           const normalized = data.map((c) => {
             let sector = c.companySector?.toUpperCase() || "";
 
@@ -164,7 +158,6 @@ export const useCompanyStore = create(
       },
     }),
     {
-      // 2. Add the unique storage key name
       name: "company-storage",
     }
   )
@@ -178,10 +171,54 @@ export const useOfferStore = create((set) => ({
 }));
 
 
+// ⚙️ SETTINGS STORE
+export const useSettingStore = create(
+  persist(
+    (set) => ({
+      branches: [],
+      batches: [],
+      fetchSettings: async () => {
+        try {
+          const [branchRes, batchRes] = await Promise.all([
+            axios.get("http://127.0.0.1:8000/api/settings/branches"),
+            axios.get("http://127.0.0.1:8000/api/settings/batches")
+          ]);
+          set({ 
+            branches: branchRes.data.map(b => b.name), 
+            batches: batchRes.data.map(b => b.name) 
+          });
+        } catch (err) {
+          console.error("Failed to fetch settings", err);
+        }
+      }
+    }),
+    { name: "settings-storage" }
+  )
+);
+
 // 📄 SUBMISSION STORE
-export const useSubmissionStore = create((set) => ({
+export const useSubmissionStore = create((set, get) => ({
   submissions: [],
   setSubmissions: (data) => set({ submissions: data }),
+  fetchSubmissions: async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/offer");
+      // Map it to what Profile expects, or just store directly
+      const formatted = res.data.map(o => ({
+        id: o._id || o.rollNo + o.company,
+        rollNo: o.rollNo,
+        company: o.company,
+        status: o.status,
+        offerType: o.offerType || "Full-Time",
+        package: o.package,
+        submissionDate: o.createdAt,
+        file: o.file
+      }));
+      set({ submissions: formatted });
+    } catch(err) {
+      console.error(err);
+    }
+  }
 }));
 
 
@@ -189,13 +226,11 @@ export const useSubmissionStore = create((set) => ({
 export const useUserStore = create((set) => ({
   users: [],
   setUsers: (data) => set({ users: data }),
-  selectedUser: null, // Holds the user data when editing
+  selectedUser: null,
   isModalOpen: false,
 
   setSelectedUser: (user) => set({ selectedUser: user, isModalOpen: true }),
   closeModal: () => set({ selectedUser: null, isModalOpen: false }),
-
-  // Existing addUser logic...
 
   updateUser: async (email, updatedData) => {
     try {
@@ -211,13 +246,11 @@ export const useUserStore = create((set) => ({
       return { success: false, error: "Failed to update user" };
     }
   },
-  // Inside your useUserStore
+
   addUser: async (userData) => {
     try {
-      // 1. Ensure the URL is correct (match your prefix in main.py)
       const res = await axios.post("http://127.0.0.1:8000/api/users/register", userData);
 
-      // 2. ✅ res.data.user contains the object we just returned from Python
       set((state) => ({
         users: [...state.users, res.data.user]
       }));
@@ -229,10 +262,8 @@ export const useUserStore = create((set) => ({
   },
   deleteUser: async (email) => {
     try {
-      // Calls the DELETE route in users.py
       await axios.delete(`http://127.0.0.1:8000/api/users/${email}`);
 
-      // Update UI by filtering out the deleted user
       set((state) => ({
         users: state.users.filter((user) => user.email !== email)
       }));
@@ -245,10 +276,7 @@ export const useUserStore = create((set) => ({
 
   fetchUsers: async () => {
     try {
-      // Ensure this matches your FastAPI mount point (e.g., /api/users)
       const res = await axios.get("http://127.0.0.1:8000/api/users");
-
-      // Zustand set function updates the 'users' array
       set({ users: res.data });
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -257,12 +285,27 @@ export const useUserStore = create((set) => ({
 }));
 
 
-// 🔔 NOTIFICATION STORE
+// 🔔 NOTIFICATION STORE — fetches from backend, only valid events
 export const useNotificationStore = create((set, get) => ({
-  notifications: [
-    { id: 1, message: "New company added", read: false, time: "2m ago" },
-    { id: 2, message: "Offer updated", read: false, time: "5m ago" },
-  ],
+  notifications: [],
+
+  fetchNotifications: async () => {
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/notifications/");
+      const notifs = res.data.map((n) => ({
+        id: n._id,
+        message: n.message,
+        read: n.read || false,
+        time: n.time || "",
+        type: n.type,
+      }));
+      set({ notifications: notifs });
+    } catch (err) {
+      // If backend has no notifications, start empty
+      console.error("Notification fetch error:", err);
+      set({ notifications: [] });
+    }
+  },
 
   markAsRead: (id) =>
     set((state) => ({
@@ -271,13 +314,16 @@ export const useNotificationStore = create((set, get) => ({
       ),
     })),
 
-  markAllRead: () =>
+  markAllRead: () => {
     set((state) => ({
       notifications: state.notifications.map((n) => ({
         ...n,
         read: true,
       })),
-    })),
+    }));
+    // Also mark on backend
+    axios.put("http://127.0.0.1:8000/api/notifications/read/all").catch(() => {});
+  },
 
   getUnreadCount: () =>
     get().notifications.filter((n) => !n.read).length,

@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { useStudentStore } from '../../store';
+import { useStudentStore, useSettingStore } from '../../store';
 import DataTable from '../../components/ui/DataTable';
 import Modal from '../../components/ui/Modal';
 import { getStatusColor, getInitials, generateAvatarColor, formatDate } from '../../utils/helpers';
 
 export default function StudentReport() {
   const { students } = useStudentStore();
+  const { branches, batches } = useSettingStore();
   const [filters, setFilters] = useState({ branch: 'All', batch: 'All', status: 'All', search: '' });
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -26,12 +27,7 @@ export default function StudentReport() {
     return list;
   }, [students, filters]);
 
-  const branches = [
-    ...new Set(
-      students.map(s => s.branch?.replace(',', '').trim())
-    )
-  ];
-  const batches = [...new Set(students.map(s => s.batch))];
+  // Uses global branches/batches instead of local derived array
 
   const columns = [
     { key: 'rollNo', label: 'Roll No', width: '120px' },
@@ -92,11 +88,11 @@ export default function StudentReport() {
         <div className="flex flex-wrap gap-3">
           <select className="select-field w-auto" value={filters.branch} onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}>
             <option value="All">All Branches</option>
-            {branches.map(b => <option key={b}>{b}</option>)}
+            {branches.filter(b => b && String(b).trim() !== '').map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <select className="select-field w-auto" value={filters.batch} onChange={e => setFilters(f => ({ ...f, batch: e.target.value }))}>
             <option value="All">All Batches</option>
-            {batches.map(b => <option key={b}>{b}</option>)}
+            {batches.filter(b => b && String(b).trim() !== '').map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <select className="select-field w-auto" value={filters.status} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}>
             <option value="All">All Status</option>

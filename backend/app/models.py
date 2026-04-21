@@ -33,7 +33,7 @@ class UserLogin(BaseModel):
 class UserRegister(BaseModel):
     email: str
     password: str
-    role: str  # Admin | Staff | Faculty | Student
+    role: str  # Admin | Faculty | Student
     name: Optional[str] = None
     rollNo: Optional[str] = None
 

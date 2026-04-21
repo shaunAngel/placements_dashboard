@@ -16,7 +16,7 @@ import SubmitOffer from './pages/SubmitOffer';
 import Profile from './pages/Profile';
 import UserManagement from './pages/admin/UserManagement';
 import AdminSettings from './pages/admin/AdminSettings';
-import { useAuthStore } from './store';
+import { useAuthStore, useSettingStore } from './store';
 import PlacementChatbot from './pages/PlacementChatbot';
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -52,10 +52,13 @@ function AuthLoading() {
 
 export default function App() {
   const { isLoading, restoreSession, user, isAuthenticated } = useAuthStore();
+  const { fetchSettings } = useSettingStore();
+
   // Restore JWT session on app boot
   useEffect(() => {
     restoreSession();
-  }, [restoreSession]);
+    fetchSettings();
+  }, [restoreSession, fetchSettings]);
 
   if (isLoading) return <AuthLoading />;
 
@@ -79,7 +82,7 @@ export default function App() {
             <Route
               path="students"
               element={
-                <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Faculty']}>
+                <ProtectedRoute allowedRoles={['Admin', 'Faculty']}>
                   <StudentReport />
                 </ProtectedRoute>
               }
@@ -88,7 +91,7 @@ export default function App() {
             <Route
               path="companies"
               element={
-                <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Faculty']}>
+                <ProtectedRoute allowedRoles={['Admin', 'Faculty']}>
                   <CompanyReport />
                 </ProtectedRoute>
               }
@@ -97,7 +100,7 @@ export default function App() {
             <Route
               path="branches"
               element={
-                <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Faculty']}>
+                <ProtectedRoute allowedRoles={['Admin', 'Faculty']}>
                   <BranchReport />
                 </ProtectedRoute>
               }
@@ -106,7 +109,7 @@ export default function App() {
             <Route
               path="batches"
               element={
-                <ProtectedRoute allowedRoles={['Admin', 'Staff', 'Faculty']}>
+                <ProtectedRoute allowedRoles={['Admin', 'Faculty']}>
                   <BatchReport />
                 </ProtectedRoute>
               }

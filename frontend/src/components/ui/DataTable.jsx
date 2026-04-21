@@ -10,6 +10,7 @@ export default function DataTable({
   pageSize: defaultPageSize = 25,
   onRowClick,
   rowClassName,
+  customExportData,
 }) {
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
@@ -66,18 +67,20 @@ export default function DataTable({
   const totalPages = Math.ceil(sorted.length / pageSize);
   const paged = sorted.slice(page * pageSize, (page + 1) * pageSize);
 
-  const handleExportExcel = () => {
-    const exportData = filtered.map(row =>
+  // Use customExportData if provided, otherwise build from columns
+  const getExportData = () => {
+    if (customExportData) return customExportData;
+    return filtered.map(row =>
       Object.fromEntries(columns.map(col => [col.label, col.accessor ? col.accessor(row) : row[col.key]]))
     );
-    exportToExcel(exportData, filename);
+  };
+
+  const handleExportExcel = () => {
+    exportToExcel(getExportData(), filename);
   };
 
   const handleExportCSV = () => {
-    const exportData = filtered.map(row =>
-      Object.fromEntries(columns.map(col => [col.label, col.accessor ? col.accessor(row) : row[col.key]]))
-    );
-    exportToCSV(exportData, filename);
+    exportToCSV(getExportData(), filename);
   };
 
   return (
@@ -91,7 +94,7 @@ export default function DataTable({
             placeholder="Search..."
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
-            className="pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 w-64"
+            className="pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 w-48 sm:w-64"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -164,7 +167,7 @@ export default function DataTable({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
         <div className="flex items-center gap-2">
           <span>Show</span>
           <select
